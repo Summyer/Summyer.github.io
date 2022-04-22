@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="description" content="最后发现是因为&#x2F;api前缀的问题5.1.5.RELEASE没有问题是因为测试用得&#x2F;resource测试的 ## 问题说明： 使用springcloudgateway3.0.7+springsecurity5.5.1 做授权认证，发现经过授权码认证后还是不能访问后端resource,实际一直在重复循环做授权码认证过程，session也会一直变，所有后面在取authenticati">
+<meta property="og:type" content="article">
+<meta property="og:title" content="springcloudgateway+oauth2+springsecurity循环调整认证的问题">
+<meta property="og:url" content="https://summyer.github.io/2022/04/22/springcloudgateway+oauth2+springsecurity%E5%BE%AA%E7%8E%AF%E8%B0%83%E6%95%B4%E8%AE%A4%E8%AF%81%E7%9A%84%E9%97%AE%E9%A2%98/index.html">
+<meta property="og:site_name" content="星星博客">
+<meta property="og:description" content="最后发现是因为&#x2F;api前缀的问题5.1.5.RELEASE没有问题是因为测试用得&#x2F;resource测试的 ## 问题说明： 使用springcloudgateway3.0.7+springsecurity5.5.1 做授权认证，发现经过授权码认证后还是不能访问后端resource,实际一直在重复循环做授权码认证过程，session也会一直变，所有后面在取authenticati">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2022-04-22T11:57:42.000Z">
+<meta property="article:modified_time" content="2022-04-22T12:46:45.788Z">
+<meta property="article:author" content="summyer">
+<meta property="article:tag" content="springclouggateway">
+<meta property="article:tag" content="springsecurity">
+<meta property="article:tag" content="oauth2">
+<meta name="twitter:card" content="summary">
+    
+    
+        
+          
+              <link rel="shortcut icon" href="/images/favicon.ico">
+          
+        
+        
+          
+            <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+          
+        
+        
+          
+            <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+          
+        
+    
+    <!-- title -->
+    <title>springcloudgateway+oauth2+springsecurity循环调整认证的问题</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- rss -->
+    
+    
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+<body>
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/posts/">Writing</a></li>
+         
+          <li><a target="_blank" rel="noopener" href="https://github.com/summyer">Projects</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" href="/2022/04/22/hello-world/"><i class="fa fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" href="#"><i class="fa fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=https://summyer.github.io/2022/04/22/springcloudgateway+oauth2+springsecurity%E5%BE%AA%E7%8E%AF%E8%B0%83%E6%95%B4%E8%AE%A4%E8%AF%81%E7%9A%84%E9%97%AE%E9%A2%98/"><i class="fa fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=https://summyer.github.io/2022/04/22/springcloudgateway+oauth2+springsecurity%E5%BE%AA%E7%8E%AF%E8%B0%83%E6%95%B4%E8%AE%A4%E8%AF%81%E7%9A%84%E9%97%AE%E9%A2%98/&text=springcloudgateway+oauth2+springsecurity循环调整认证的问题"><i class="fa fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=https://summyer.github.io/2022/04/22/springcloudgateway+oauth2+springsecurity%E5%BE%AA%E7%8E%AF%E8%B0%83%E6%95%B4%E8%AE%A4%E8%AF%81%E7%9A%84%E9%97%AE%E9%A2%98/&title=springcloudgateway+oauth2+springsecurity循环调整认证的问题"><i class="fa fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=https://summyer.github.io/2022/04/22/springcloudgateway+oauth2+springsecurity%E5%BE%AA%E7%8E%AF%E8%B0%83%E6%95%B4%E8%AE%A4%E8%AF%81%E7%9A%84%E9%97%AE%E9%A2%98/&is_video=false&description=springcloudgateway+oauth2+springsecurity循环调整认证的问题"><i class="fa fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=springcloudgateway+oauth2+springsecurity循环调整认证的问题&body=Check out this article: https://summyer.github.io/2022/04/22/springcloudgateway+oauth2+springsecurity%E5%BE%AA%E7%8E%AF%E8%B0%83%E6%95%B4%E8%AE%A4%E8%AF%81%E7%9A%84%E9%97%AE%E9%A2%98/"><i class="fa fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=https://summyer.github.io/2022/04/22/springcloudgateway+oauth2+springsecurity%E5%BE%AA%E7%8E%AF%E8%B0%83%E6%95%B4%E8%AE%A4%E8%AF%81%E7%9A%84%E9%97%AE%E9%A2%98/&title=springcloudgateway+oauth2+springsecurity循环调整认证的问题"><i class="fa fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=https://summyer.github.io/2022/04/22/springcloudgateway+oauth2+springsecurity%E5%BE%AA%E7%8E%AF%E8%B0%83%E6%95%B4%E8%AE%A4%E8%AF%81%E7%9A%84%E9%97%AE%E9%A2%98/&title=springcloudgateway+oauth2+springsecurity循环调整认证的问题"><i class="fa fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=https://summyer.github.io/2022/04/22/springcloudgateway+oauth2+springsecurity%E5%BE%AA%E7%8E%AF%E8%B0%83%E6%95%B4%E8%AE%A4%E8%AF%81%E7%9A%84%E9%97%AE%E9%A2%98/&title=springcloudgateway+oauth2+springsecurity循环调整认证的问题"><i class="fa fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=https://summyer.github.io/2022/04/22/springcloudgateway+oauth2+springsecurity%E5%BE%AA%E7%8E%AF%E8%B0%83%E6%95%B4%E8%AE%A4%E8%AF%81%E7%9A%84%E9%97%AE%E9%A2%98/&title=springcloudgateway+oauth2+springsecurity循环调整认证的问题"><i class="fa fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=https://summyer.github.io/2022/04/22/springcloudgateway+oauth2+springsecurity%E5%BE%AA%E7%8E%AF%E8%B0%83%E6%95%B4%E8%AE%A4%E8%AF%81%E7%9A%84%E9%97%AE%E9%A2%98/&name=springcloudgateway+oauth2+springsecurity循环调整认证的问题&description="><i class="fa fa-tumblr " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index width mx-auto px2 my4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        springcloudgateway+oauth2+springsecurity循环调整认证的问题
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">星星博客</span>
+      </span>
+      
+    <div class="postdate">
+        <time datetime="2022-04-22T11:57:42.000Z" itemprop="datePublished">2022-04-22</time>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa fa-tag"></i>
+        <a class="tag-link-link" href="/tags/oauth2/" rel="tag">oauth2</a>, <a class="tag-link-link" href="/tags/springclouggateway/" rel="tag">springclouggateway</a>, <a class="tag-link-link" href="/tags/springsecurity/" rel="tag">springsecurity</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <p>最后发现是因为&#x2F;api前缀的问题<br>5.1.5.RELEASE没有问题是因为测试用得&#x2F;resource测试的</p>
+<p>## <strong>问题说明</strong>：</p>
+<p>使用springcloudgateway3.0.7+springsecurity5.5.1 做授权认证，发现经过授权码认证后还是不能访问后端resource,实际一直在重复循环做授权码认证过程，session也会一直变，所有后面在取authentication时就在当前session中找不到，实际session一直变也是因为重复做授权码认证过程导致的，最后偶然发现是因为地址是&#x2F;api前缀的问题，改成非&#x2F;api前缀的地址，后端resource可以正常访问</p>
+<p>![](20220415121021214_1258802145.png &#x3D;500x)</p>
+<p>授权服务器：localhost:5002</p>
+<p>![](20220415121034720_1826244418.png &#x3D;500x)</p>
+<p>gateway: localhost:5000</p>
+<p>![](20220415121058058_1853650402.png &#x3D;500x)</p>
+<p>gateway: localhost:5002</p>
+<p>## 解决办法</p>
+<p>问题分析 ：</p>
+<p>可以看到cookie区分域没有考虑端口，所以在读取名为SESSION的cookie建时，每次读取的不一样，其中有些是读的授权服务器的cookie值，有些是网关服务的cookie</p>
+<p>后端重启相关服务后，需要清掉浏览器缓存</p>
+<p>解决：</p>
+<p>\1. 测试时通过域名不同做区分</p>
+<p>\2. 如果想都用localhost，可以通过地址前缀做区分，即授权服务用&#x2F;api前缀，网关服务用非&#x2F;api前缀转发</p>
+<p>一句话：Cookie的作用域仅仅由domain和path决定，与协议和端口无关。</p>
+<p>## 项目:simplesystem</p>
+
+  </div>
+</article>
+
+
+
+    </div>
+    
+      <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/posts/">Writing</a></li>
+         
+          <li><a target="_blank" rel="noopener" href="https://github.com/summyer">Projects</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=https://summyer.github.io/2022/04/22/springcloudgateway+oauth2+springsecurity%E5%BE%AA%E7%8E%AF%E8%B0%83%E6%95%B4%E8%AE%A4%E8%AF%81%E7%9A%84%E9%97%AE%E9%A2%98/"><i class="fa fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=https://summyer.github.io/2022/04/22/springcloudgateway+oauth2+springsecurity%E5%BE%AA%E7%8E%AF%E8%B0%83%E6%95%B4%E8%AE%A4%E8%AF%81%E7%9A%84%E9%97%AE%E9%A2%98/&text=springcloudgateway+oauth2+springsecurity循环调整认证的问题"><i class="fa fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=https://summyer.github.io/2022/04/22/springcloudgateway+oauth2+springsecurity%E5%BE%AA%E7%8E%AF%E8%B0%83%E6%95%B4%E8%AE%A4%E8%AF%81%E7%9A%84%E9%97%AE%E9%A2%98/&title=springcloudgateway+oauth2+springsecurity循环调整认证的问题"><i class="fa fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=https://summyer.github.io/2022/04/22/springcloudgateway+oauth2+springsecurity%E5%BE%AA%E7%8E%AF%E8%B0%83%E6%95%B4%E8%AE%A4%E8%AF%81%E7%9A%84%E9%97%AE%E9%A2%98/&is_video=false&description=springcloudgateway+oauth2+springsecurity循环调整认证的问题"><i class="fa fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=springcloudgateway+oauth2+springsecurity循环调整认证的问题&body=Check out this article: https://summyer.github.io/2022/04/22/springcloudgateway+oauth2+springsecurity%E5%BE%AA%E7%8E%AF%E8%B0%83%E6%95%B4%E8%AE%A4%E8%AF%81%E7%9A%84%E9%97%AE%E9%A2%98/"><i class="fa fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=https://summyer.github.io/2022/04/22/springcloudgateway+oauth2+springsecurity%E5%BE%AA%E7%8E%AF%E8%B0%83%E6%95%B4%E8%AE%A4%E8%AF%81%E7%9A%84%E9%97%AE%E9%A2%98/&title=springcloudgateway+oauth2+springsecurity循环调整认证的问题"><i class="fa fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=https://summyer.github.io/2022/04/22/springcloudgateway+oauth2+springsecurity%E5%BE%AA%E7%8E%AF%E8%B0%83%E6%95%B4%E8%AE%A4%E8%AF%81%E7%9A%84%E9%97%AE%E9%A2%98/&title=springcloudgateway+oauth2+springsecurity循环调整认证的问题"><i class="fa fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=https://summyer.github.io/2022/04/22/springcloudgateway+oauth2+springsecurity%E5%BE%AA%E7%8E%AF%E8%B0%83%E6%95%B4%E8%AE%A4%E8%AF%81%E7%9A%84%E9%97%AE%E9%A2%98/&title=springcloudgateway+oauth2+springsecurity循环调整认证的问题"><i class="fa fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=https://summyer.github.io/2022/04/22/springcloudgateway+oauth2+springsecurity%E5%BE%AA%E7%8E%AF%E8%B0%83%E6%95%B4%E8%AE%A4%E8%AF%81%E7%9A%84%E9%97%AE%E9%A2%98/&title=springcloudgateway+oauth2+springsecurity循环调整认证的问题"><i class="fa fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=https://summyer.github.io/2022/04/22/springcloudgateway+oauth2+springsecurity%E5%BE%AA%E7%8E%AF%E8%B0%83%E6%95%B4%E8%AE%A4%E8%AF%81%E7%9A%84%E9%97%AE%E9%A2%98/&name=springcloudgateway+oauth2+springsecurity循环调整认证的问题&description="><i class="fa fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+      <ul>
+        <li id="toc"><a class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa fa-list fa-lg" aria-hidden="true"></i> TOC</a></li>
+        <li id="share"><a class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa fa-share-alt fa-lg" aria-hidden="true"></i> Share</a></li>
+        <li id="top" style="display:none"><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a></li>
+        <li id="menu"><a class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa fa-bars fa-lg" aria-hidden="true"></i> Menu</a></li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+    
+    <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy; 2022 summyer
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/posts/">Writing</a></li>
+         
+          <li><a target="_blank" rel="noopener" href="https://github.com/summyer">Projects</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>
+<!-- styles -->
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="/lib/meslo-LG/styles.css">
+
+
+<link rel="stylesheet" href="/lib/justified-gallery/justifiedGallery.min.css">
+
+
+<!-- jquery -->
+
+<script src="/lib/jquery/jquery.min.js"></script>
+
+
+<script src="/lib/justified-gallery/jquery.justifiedGallery.min.js"></script>
+
+
+<script src="/js/main.js"></script>
+
+
+
+    <!-- Google Analytics -->
+    <script type="text/javascript">
+        (function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+        ga('create', 'UA-37473492-6', 'auto');
+        ga('send', 'pageview');
+    </script>
+
+
+
